@@ -297,6 +297,252 @@ Mechanism for processes to communicate and share data.
 
 ---
 
+What is process scheduling? Explain different scheduling algorithms.
+Process scheduling decides which ready process gets CPU.
+
+FCFS (First Come First Served): Non-preemptive; simple but causes convoy effect (short jobs wait behind long ones).
+
+SJF (Shortest Job First): Non-preemptive; minimizes average waiting time but requires knowing job length.
+
+Round Robin (RR): Preemptive; each process gets a time quantum (e.g., 10ms). Fair, good for time-sharing, but quantum selection is critical.
+
+Priority Scheduling: Each process has a priority; can be preemptive/non-preemptive. Risk of starvation (solved with aging).
+
+How do context switches work, and why are they necessary?
+
+How: Save state (registers, PC, MMU info) of current process into its PCB (Process Control Block); load saved state of next process from its PCB.
+
+Why: Allows CPU to share time across multiple processes, enabling multitasking. Overhead: pure overhead (wasted cycles).
+
+What are threads, and how do they differ from processes?
+
+Thread: Lightweight unit of execution within a process. Shares code, data, files with other threads of same process; has its own stack, registers, PC.
+
+Difference: Processes isolated (no memory sharing); threads share memory (easier communication but less protection). Creating/context-switching threads is cheaper.
+
+Explain the difference between user-level and kernel-level threads.
+
+User-level: Managed by thread library in user space (e.g., POSIX Pthreads on Linux in user mode). Fast, no kernel involvement; but one blocking thread blocks whole process.
+
+Kernel-level: Managed by OS kernel (e.g., Windows threads). Slower due to syscalls; kernel schedules threads individually; can run on multiple CPUs.
+
+What are multi-threaded processes, and why are they used?
+Process containing multiple threads. Used for:
+
+Parallelism (e.g., one core for UI, others for computation).
+
+Resource sharing (threads share memory).
+
+Responsiveness (one thread blocked ≠ whole app frozen).
+
+Economy (cheaper than processes).
+
+3. Inter-process Communication (IPC)
+What is IPC, and why is it important?
+Mechanisms for processes to exchange data/signals. Important for cooperation, data sharing, modularity, and isolation while still communicating.
+
+Explain different IPC mechanisms.
+
+Pipes: Unidirectional byte stream (unnamed – between relatives; named – any processes).
+
+Message queues: Structured messages; processes read/write messages; kernel manages.
+
+Shared memory: Fastest; processes map same memory region; needs synchronization (semaphores).
+
+Sockets: For network/local communication; supports bidirectional.
+
+What are semaphores and mutexes? How do they help in process synchronization?
+
+Mutex (binary semaphore): Lock with ownership; only locking thread can unlock. Used for mutual exclusion.
+
+Semaphore: Integer with wait()/signal() (P/V). Counting semaphore for multiple resources. Helps prevent race conditions.
+
+What is a race condition, and how can it be prevented?
+Two+ processes access shared data concurrently, and final result depends on execution order. Prevention: mutual exclusion (locks, semaphores, atomic operations).
+
+Describe deadlock and necessary conditions.
+Deadlock: Processes wait forever for resources held by each other. Four necessary conditions:
+
+Mutual exclusion
+
+Hold and wait
+
+No preemption
+
+Circular wait
+
+Methods for handling deadlocks.
+
+Prevention: Break one of 4 conditions (e.g., break circular wait by ordered resource allocation).
+
+Avoidance: Use Banker’s algorithm (OS checks if allocation would cause unsafe state).
+
+Detection + Recovery: Allow deadlock, detect (e.g., resource allocation graph), then recover (kill processes/preempt resources).
+
+4. Memory Management
+What is memory management, and why is it important?
+Managing RAM allocation to processes. Important for: isolation, protection, efficient usage, virtual memory, and relocation.
+
+Physical vs. virtual memory.
+
+Physical: Actual RAM hardware addresses.
+
+Virtual: Per-process address space (0 to max). OS maps virtual to physical via MMU; allows more memory than physical (using disk).
+
+What is paging, and how does it work?
+Divide physical memory into frames, virtual memory into pages (same size). OS maintains page table mapping virtual page → physical frame. Enables non-contiguous allocation.
+
+Describe segmentation and compare to paging.
+
+Segmentation: Logical units (code, data, stack) of variable size; user-visible.
+
+Comparison: Paging has fixed-size blocks (invisible to user); no external fragmentation but internal fragmentation. Segmentation has variable sizes; no internal fragmentation but external fragmentation; supports sharing/protection per segment.
+
+What is a page fault, and how does OS handle it?
+Access to virtual page not in physical memory.
+
+Hardware traps to OS.
+
+OS finds page on disk (swap area).
+
+Finds free physical frame (may evict other page via replacement algorithm).
+
+Reads page from disk (process blocks).
+
+Updates page table, restarts instruction.
+
+Explain page replacement algorithms.
+
+FIFO: Replace oldest loaded page. Simple but suffers from Belady’s anomaly (more frames → more faults).
+
+LRU (Least Recently Used): Replace page not used for longest time. Good but costly to implement.
+
+Optimal (MIN): Replace page used farthest in future. Unrealizable (clairvoyant), used as benchmark.
+
+What is memory fragmentation?
+
+Internal: Allocated memory larger than requested (e.g., page has unused bytes inside).
+
+External: Total free memory is sufficient but not contiguous (scattered holes).
+
+How does virtual memory help?
+
+Allows process size > physical memory.
+
+Isolates processes (each has own address space).
+
+Simplifies linking/protection.
+
+Enables lazy loading, copy-on-write, memory-mapped files.
+
+5. File Systems
+What is a file system, and why important?
+Organizes persistent data on storage. Provides naming, structure, permissions, reliability, and efficient access.
+
+Explain FAT32, NTFS, EXT4.
+
+FAT32: Simple, widely compatible, no permissions, max file 4GB.
+
+NTFS: Windows (journalling, permissions, encryption, compression).
+
+EXT4: Linux default (journalling, extents, backward compatible with ext2/3).
+
+Describe file system hierarchy.
+Tree structure: Root (/) → directories → subdirectories → files. Paths absolute (/home/user/file) or relative (./file).
+
+What are inodes?
+Metadata structure (Linux/Unix) storing file info except name: permissions, size, timestamps, pointers to data blocks. Directories map filenames → inode numbers.
+
+Hard links vs. soft (symbolic) links.
+
+Hard link: Another directory entry pointing to same inode; survives file move; cannot cross filesystems.
+
+Soft link: Special file containing path to target; can cross filesystems; broken if target deleted.
+
+What are file permissions, and why important?
+Read/Write/Execute for Owner/Group/Others (Unix). Also ACLs. Protects confidentiality, integrity, and availability.
+
+6. Concurrency and Synchronization
+What is concurrency, and why important?
+Multiple computations overlapping in time (on single-core via interleaving, or parallel on multi-core). Needed for responsiveness, resource utilization, and performance.
+
+Explain critical section.
+Code segment that accesses shared variables/resources. Must not be executed by more than one thread/process at a time.
+
+What is mutual exclusion, and how achieved?
+Property that only one process at a time executes critical section. Achieved via: locks, semaphores, monitors, atomic instructions.
+
+Preemptive vs. non-preemptive scheduling.
+
+Preemptive: OS can forcibly remove process from CPU (e.g., time slice). Required for real-time fairness.
+
+Non-preemptive: Process runs until it voluntarily yields (block or exit). Simpler but less responsive.
+
+Synchronous vs. asynchronous operations.
+
+Synchronous: Caller waits for operation to complete (blocking).
+
+Asynchronous: Caller continues; notified later via callback/signal/event.
+
+Explain monitors and condition variables.
+Monitor: High-level synchronization construct (e.g., Java synchronized methods) with mutual exclusion automatically enforced. Condition variables inside monitor: wait() (release lock, sleep), signal() (wake one waiter), broadcast() (wake all). Prevents busy-waiting.
+
+7. Input/Output Management
+What is I/O management?
+OS subsystem controlling I/O devices: buffering, caching, spooling, device drivers, interrupt handling, and scheduling I/O requests.
+
+Role of device drivers.
+Kernel modules that translate generic I/O requests to device-specific commands. Handle device registers, interrupts, DMA.
+
+Types of I/O operations.
+
+Programmed I/O (CPU busy-waits)
+
+Interrupt-driven I/O
+
+DMA (Direct Memory Access)
+
+How OS handles I/O requests.
+
+Process issues syscall (e.g., read()).
+
+OS checks cache/buffer; if needed, queues request to device driver.
+
+Driver sends command to device; process may block.
+
+Device raises interrupt on completion; ISR (Interrupt Service Routine) wakes waiting process.
+
+Explain DMA and benefits.
+DMA: Special controller transfers data between device and memory without CPU intervention (except setup/completion interrupt). Benefits: Frees CPU for other work; faster large transfers.
+
+8. Security and Protection
+Role of OS in system security.
+Mediates access to resources (memory, files, devices, CPU). Enforces policies: authentication, authorization, auditing, isolation.
+
+User mode vs. kernel mode.
+
+Kernel mode: CPU can execute privileged instructions (I/O, change MMU, disable interrupts). OS runs here.
+
+User mode: Restricted; syscalls trap to kernel. Protects system integrity.
+
+What is access control?
+Mechanism determining if subject (user/process) can perform operation on object (file, memory). Types: DAC (Unix permissions), MAC (SELinux), RBAC.
+
+Common OS security mechanisms.
+
+Authentication: Password, biometric, 2FA.
+
+Authorization: Permissions, capabilities, ACLs.
+
+Encryption: Disk encryption (BitLocker, LUKS), file encryption, network encryption (IPsec).
+
+Auditing/logging, address space layout randomization (ASLR), stack canaries, NX bit.
+
+What is privilege escalation, and how prevented?
+Attacker gains higher privileges than intended (e.g., user → root). Prevention: least privilege principle, regular patches, userland/kernel exploit mitigations (KASLR, SMEP, SMAP), non-executable stacks, careful input validation in syscalls.
+
+This response is AI-generated, for reference only.
+
 ### **Semaphores & Mutex**
 
 * **Semaphore** → Counter-based synchronization
